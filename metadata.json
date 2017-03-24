@@ -1,0 +1,8 @@
+{
+  "itemDisplayName": "Deploy an open VPN server on Azure",
+  "icon": "ubuntu",
+  "description": "This template allows you to setup open vpn server on an Ubuntu VM in your Azure Subscription.",
+  "summary": "This template takes a minimum amount of parameters and setup open VPN on a Ubuntu VM.",
+  "githubUsername": "smattoo",
+  "dateUpdated": "2017-03-24"
+}
