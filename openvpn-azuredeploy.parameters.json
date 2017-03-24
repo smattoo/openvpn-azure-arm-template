@@ -6,7 +6,7 @@
       "value": "Standard_A0"
     },
     "fileUris": {
-      "value": ""
+      "value": "https://raw.githubusercontent.com/smattoo/openvpn-azure-arm-template/master/openvpn-setup.sh"
     },
     "email": {
       "value": "mattoo.sagar@gmail.com"

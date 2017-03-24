@@ -139,7 +139,7 @@ sed -i 's/;cipher x.*/cipher AES-128-CBC/' $configbase
 sed -i '/cipher AES-128-CBC/a auth SHA256' $configbase
 sed -i '/auth SHA256/a key-direction 1' $configbase
 
-wget ""
+wget "https://raw.githubusercontent.com/smattoo/openvpn-azure-arm-template/master/make_config.sh"
 
 chmod 700 make_config.sh
 
