@@ -1,0 +1,266 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmSize": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_A0",
+	      "Standard_A1",
+        "Standard_A2",
+        "Standard_A3",
+        "Standard_A4",
+        "Standard_D1",
+        "Standard_D2",
+        "Standard_D3",
+        "Standard_D4",
+        "Standard_D1_v2"
+      ],
+      "metadata": {
+        "description": "Size of vm"
+      }
+    },
+    "username": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the Virtual Machine."
+      }
+    },
+    "password": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the Virtual Machine."
+      }
+    },
+    "dnsNameForPublicIP": {
+      "type": "string",
+      "defaultValue": "dgopenvpnserver",
+      "metadata": {
+        "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+      }
+    },
+    "fileUris": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The uri list of files. Split by a space."
+      }
+    },
+    "country": {
+      "type": "string",
+      "defaultValue": "US",
+      "metadata": {
+        "description": "The country parameter to openvpn setup script."
+      }
+    },
+    "province": {
+      "type": "string",
+      "defaultValue": "CA",
+      "metadata": {
+        "description": "The province parameter to openvpn setup script."
+      }
+    },
+    "city": {
+      "type": "string",
+      "defaultValue": "SanFrancisco",
+      "metadata": {
+        "description": "The city parameter to openvpn setup script."
+      }
+    },
+    "org": {
+      "type": "string",
+      "defaultValue": "DigitalOcean",
+      "metadata": {
+        "description": "The org for open vpn"
+      }
+    },
+    "email": {
+      "type": "string",
+      "defaultValue": "admin@eexample.com",
+      "metadata": {
+        "description": "The email for open vpn"
+      }
+    },
+    "ou": {
+      "type": "string",
+      "defaultValue": "Individual",
+      "metadata": {
+        "description": "The ou for open vpn"
+      }
+    },
+    "proto": {
+      "type": "string",
+      "defaultValue": "tcp",
+      "allowedValues": [
+        "tcp",
+        "udp"
+      ],
+      "metadata": {
+        "description": "The proto for open vpn"
+      }
+    },
+    "port": {
+      "type": "string",
+      "defaultValue": "443",
+      "metadata": {
+        "description": "The port for open vpn"
+      }
+    }
+  },
+  "variables": {
+    "extensionName": "CustomScript",
+    "scenarioPrefix": "openvpnserver",
+    "apiVersion": "2015-05-01-preview",
+    "imagePublisher": "Canonical",
+    "imageOffer": "UbuntuServer",
+    "ubuntuOSVersion": "16.04-LTS",
+    "OSDiskName": "[concat(variables('scenarioPrefix'),'OSDisk')]",
+    "nicName": "[concat(variables('scenarioPrefix'),'Nic')]",
+    "vnetAddressPrefix": "10.0.0.0/16",
+    "subnetName": "[concat(variables('scenarioPrefix'),'Subnet')]",
+    "subnetPrefix": "10.0.0.0/24",
+    "newStorageAccountName": "[concat(uniqueString(resourceGroup().id),'openvpnsa')]",
+    "storageAccountType": "Standard_LRS",
+    "publicIPAddressName": "[concat(variables('scenarioPrefix'),'PublicIp')]",
+    "publicIPAddressType": "Dynamic",
+    "vmStorageAccountContainerName": "vhds",
+    "vmName": "[concat(variables('scenarioPrefix'),'VM')]",
+    "virtualNetworkName": "[concat(variables('scenarioPrefix'),'Vnet')]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "publicHostname": "[concat(parameters('dnsNameForPublicIP'), '.', resourceGroup().location , '.cloudapp.azure.com')]",
+    "commandToExecute": "[concat('chmod u+x openvpn-setup.sh && ./openvpn-setup.sh ', parameters('country'),' ', parameters('province'),' ', parameters('city'), ' ', parameters('org'),' ', parameters('email'), ' ', parameters('ou'), ' ' , parameters('proto'), ' ',  parameters('port'), ' ', variables('publicHostname'), ' ', parameters('username'))]"
+  }, 
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('newStorageAccountName')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('dnsNameForPublicIP')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnetAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('newStorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('username')]",
+          "adminPassword": "[parameters('password')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('ubuntuOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk1",
+            "vhd": {
+              "uri": "[concat('http://',variables('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'),'/installcustomscript')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": "[split(parameters('fileUris'), ' ')]",
+          "commandToExecute": "[variables('commandToExecute')]"
+        }
+      }
+    }
+  ]
+}
