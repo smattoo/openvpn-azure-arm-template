@@ -2,8 +2,14 @@
 
 ARM template to setup open vpn server in Microsoft Azure.
 
-### Steps ###
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https://raw.githubusercontent.com/smattoo/openvpn-azure-arm-template/master/openvpn-azuredeploy.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
+<a href="http://armviz.io/#/?load=Frahttps://raw.githubusercontent.com/smattoo/openvpn-azure-arm-template/master/openvpn-azuredeploy.json" target="_blank">
+    <img src="http://armviz.io/visualizebutton.png"/>
+</a>
 
+### Steps ###
 
 - Update the template parameters as required.
 - Run the template
