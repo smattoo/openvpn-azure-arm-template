@@ -38,14 +38,7 @@
       "metadata": {
         "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
       }
-    },
-    "fileUris": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "The uri list of files. Split by a space."
-      }
-    },
+    },    
     "country": {
       "type": "string",
       "defaultValue": "US",
@@ -257,7 +250,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[split(parameters('fileUris'), ' ')]",
+          "fileUris": "[split('https://raw.githubusercontent.com/smattoo/openvpn-azure-arm-template/master/openvpn-setup.sh', ' ')]",
           "commandToExecute": "[variables('commandToExecute')]"
         }
       }
